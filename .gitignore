@@ -1,2 +1,13 @@
-fabric-data-agent-web-publish/__pycache_
+fabric-data-agent-mcp-highcode/.venv
+fabric-data-agent-mcp-highcode/.env
+
+
+fabric-data-agent-web-publish/__pycache__
 fabric-data-agent-web-publish/.env
+fabric-data-agent-web-publish/.venv
+
+
+fabric-foundry-mcp-web-lowcode/__pycache__
+fabric-foundry-mcp-web-lowcode/.env
+fabric-foundry-mcp-web-lowcode/.venv
+
