@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Fabric Data Agent</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f7fb;
+            color: #222;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 17px;
+        }
+
+        .chat-box {
+            background: #f8f9fc;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 20px;
+
+            min-height: 350px;
+            max-height: 500px;
+
+            overflow-y: auto;
+
+            margin-bottom: 20px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+        }
+
+        .message.agent-message {
+            justify-content: flex-start;
+        }
+
+        .message.user-message {
+            justify-content: flex-end;
+        }
+
+        .agent {
+            background: white;
+            border: 1px solid #e5e7eb;
+            padding: 14px 16px;
+            border-radius: 12px;
+
+            width: fit-content;
+            max-width: 80%;
+
+            line-height: 1.5;
+        }
+
+        .user {
+            background: #111827;
+            color: white;
+
+            padding: 14px 16px;
+            border-radius: 12px;
+
+            width: fit-content;
+            max-width: 80%;
+
+            line-height: 1.5;
+        }
+
+        /* Input + Ask button */
+
+        .input-area {
+            display: flex;
+            width: 100%;
+            gap: 12px;
+        }
+
+        #questionInput {
+            flex: 1;
+
+            padding: 16px 18px;
+
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+
+            font-size: 16px;
+            outline: none;
+        }
+
+        #questionInput:focus {
+            border-color: #6b7280;
+        }
+
+        #askButton {
+            min-width: 100px;
+
+            padding: 16px 24px;
+
+            border: none;
+            border-radius: 12px;
+
+            background: #111827;
+            color: white;
+
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #askButton:hover {
+            opacity: 0.9;
+        }
+
+        #askButton:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin-top: 15px;
+
+            font-size: 13px;
+            color: #777;
+        }
+        .agent {
+    background: white;
+    border: 1px solid #e5e7eb;
+    padding: 20px 24px;
+    border-radius: 12px;
+    max-width: 85%;
+    line-height: 1.6;
+    font-size: 15px;
+}
+
+.agent p {
+    margin: 8px 0;
+}
+
+.agent ul,
+.agent ol {
+    margin: 10px 0;
+    padding-left: 25px;
+}
+
+.agent li {
+    margin-bottom: 7px;
+}
+
+.agent h1,
+.agent h2,
+.agent h3 {
+    margin-top: 18px;
+    margin-bottom: 8px;
+}
+
+.agent strong {
+    font-weight: 600;
+}
+
+    </style>
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+
+        <h1>Fabric Data Agent Using MCP</h1>
+
+        <p class="subtitle">
+            Ask questions about your Microsoft Fabric data.
+        </p>
+
+
+        <!-- CHAT AREA -->
+
+        <div class="chat-box" id="chatBox">
+
+            <div class="message agent-message">
+
+                <div class="agent">
+                    Hello! I am your Fabric Data Agent.
+                    Ask me something about your data.
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- INPUT AREA -->
+
+        <div class="input-area">
+
+            <input
+                id="questionInput"
+                type="text"
+                placeholder="Ask something about your retail data..."
+                autocomplete="off"
+            >
+
+            <button id="askButton">
+                Ask
+            </button>
+
+        </div>
+
+
+        <div class="status" id="status">
+            Status: Website connected locally
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    const askButton =
+        document.getElementById("askButton");
+
+    const questionInput =
+        document.getElementById("questionInput");
+
+    const chatBox =
+        document.getElementById("chatBox");
+
+    const status =
+        document.getElementById("status");
+
+
+    /* CLICK ASK */
+
+    askButton.addEventListener(
+        "click",
+        askQuestion
+    );
+
+
+    /* PRESS ENTER */
+
+    questionInput.addEventListener(
+        "keydown",
+        function(event) {
+
+            if (event.key === "Enter") {
+                askQuestion();
+            }
+
+        }
+    );
+
+
+    async function askQuestion() {
+
+        const question =
+            questionInput.value.trim();
+
+
+        if (!question) {
+            return;
+        }
+
+
+        /* Display user's question */
+
+        const userMessage =
+            document.createElement("div");
+
+        userMessage.className =
+            "message user-message";
+
+        const userBubble =
+            document.createElement("div");
+
+        userBubble.className = "user";
+
+        userBubble.textContent = question;
+
+        userMessage.appendChild(userBubble);
+
+        chatBox.appendChild(userMessage);
+
+
+        /* Clear input */
+
+        questionInput.value = "";
+
+
+        /* Loading */
+
+        askButton.disabled = true;
+
+        askButton.textContent =
+            "Thinking...";
+
+        status.textContent =
+            "Status: Sending question...";
+
+
+        chatBox.scrollTop =
+            chatBox.scrollHeight;
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/ask",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            question: question
+                        })
+                    }
+                );
+
+
+            const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.answer ||
+                        data.error ||
+                        "Server returned " + response.status
+                        );
+}
+
+
+            /* Display agent response */
+
+            const agentMessage =
+                document.createElement("div");
+
+            agentMessage.className =
+                "message agent-message";
+
+
+            const agentBubble =
+                document.createElement("div");
+
+            agentBubble.className =
+                "agent";
+
+            agentBubble.innerHTML =
+                marked.parse(data.answer);
+
+
+            agentMessage.appendChild(
+                agentBubble
+            );
+
+            chatBox.appendChild(
+                agentMessage
+            );
+
+
+            status.textContent =
+                "Status: Response received";
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+
+            const errorMessage =
+                document.createElement("div");
+
+            errorMessage.className =
+                "message agent-message";
+
+
+            const errorBubble =
+                document.createElement("div");
+
+            errorBubble.className =
+                "agent";
+
+            errorBubble.textContent =
+                "Error: " + error.message;
+
+
+            errorMessage.appendChild(
+                errorBubble
+            );
+
+            chatBox.appendChild(
+                errorMessage
+            );
+
+
+            status.textContent =
+                "Status: Connection error";
+
+        }
+
+
+        /* Reset button */
+
+        askButton.disabled = false;
+
+        askButton.textContent = "Ask";
+
+
+        chatBox.scrollTop =
+            chatBox.scrollHeight;
+
+    }
+
+</script>
+
+
+</body>
+
+</html>
