@@ -131,7 +131,7 @@ class FabricDataAgentClient:
             raise ValueError("No valid authentication token available")
         
         return OpenAI(
-            api_key="",  # Not used - we use Bearer token
+            api_key="not-used",  # Not used - we use Bearer token
             base_url=self.data_agent_url,
             default_query={"api-version": "2024-05-01-preview"},
             default_headers={

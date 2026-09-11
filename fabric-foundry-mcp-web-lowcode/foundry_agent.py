@@ -35,8 +35,43 @@ openai_client = project.get_openai_client(
 
 def ask_agent(question):
 
+    # First request
     response = openai_client.responses.create(
         input=question
     )
+
+    print("\n=== FIRST RESPONSE ===")
+    print(response.output)
+
+    approval_inputs = []
+
+    # Check for MCP approval request
+    for item in response.output:
+
+        if getattr(item, "type", None) == "mcp_approval_request":
+
+            print("\nMCP approval requested")
+            print("Tool:", item.name)
+            print("Arguments:", item.arguments)
+
+            approval_inputs.append({
+                "type": "mcp_approval_response",
+                "approval_request_id": item.id,
+                "approve": True
+            })
+
+    # Continue response after approval
+    if approval_inputs:
+
+        response = openai_client.responses.create(
+            input=approval_inputs,
+            previous_response_id=response.id
+        )
+
+        print("\n=== FINAL RESPONSE ===")
+        print(response.output)
+
+    print("\n=== OUTPUT TEXT ===")
+    print(repr(response.output_text))
 
     return response.output_text
